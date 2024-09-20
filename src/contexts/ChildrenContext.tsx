@@ -1,45 +1,41 @@
-import {
-	createContext,
-	ReactNode,
-	useContext,
-	useEffect,
-	useState,
-} from 'react';
-import { Child } from '../types/Child';
+import {createContext, ReactNode, useContext, useEffect, useState} from 'react';
+import {Child} from '../types/Child';
+import {api} from '../utils/api';
 
 const ChildrenContext = createContext<
 	| {
 			data: Child[];
-			onCheckedIn: (id: string) => void;
-			onCheckedOut: (id: string) => void;
+			handleCheckIn: (id: string) => void;
+			handleCheckOut: (id: string) => void;
 	  }
 	| undefined
 >(undefined);
 
 export const ChildrenContextProvider = ({
+	defaultData = [],
 	children,
 }: {
+	defaultData?: Child[];
 	children: ReactNode;
 }) => {
-	const [data, setData] = useState<Child[]>([]);
+	const [data, setData] = useState<Child[]>(defaultData);
 
 	useEffect(() => {
 		const fetchChildren = async () => {
-			const response = await fetch(
-				`https://app.famly.co/api/daycare/tablet/group?accessToken=${
-					import.meta.env.VITE_ACCESS_TOKEN
-				}&groupId=86413ecf-01a1-44da-ba73-1aeda212a196&institutionId=dc4bd858-9e9c-4df7-9386-0d91e42280eb`
-			);
+			const {children} = await api.get<{children: Child[]}>('/daycare/tablet/group', {
+				groupId: '86413ecf-01a1-44da-ba73-1aeda212a196',
+				institutionId: 'dc4bd858-9e9c-4df7-9386-0d91e42280eb',
+			});
 
-			const data = await response.json();
-
-			setData(data.children);
+			if (children) {
+				setData(children);
+			}
 		};
 
 		fetchChildren();
 	}, []);
 
-	const onCheckedIn = (id: string) => {
+	const handleCheckIn = (id: string) => {
 		setData((data) => {
 			return data.map((child) => {
 				if (id === child.childId) {
@@ -54,7 +50,7 @@ export const ChildrenContextProvider = ({
 		});
 	};
 
-	const onCheckedOut = (id: string) => {
+	const handleCheckOut = (id: string) => {
 		setData((data) => {
 			return data.map((child) => {
 				if (id === child.childId) {
@@ -70,7 +66,7 @@ export const ChildrenContextProvider = ({
 	};
 
 	return (
-		<ChildrenContext.Provider value={{ data, onCheckedIn, onCheckedOut }}>
+		<ChildrenContext.Provider value={{data, handleCheckIn, handleCheckOut}}>
 			{children}
 		</ChildrenContext.Provider>
 	);
@@ -80,9 +76,7 @@ export const useChildrenContext = () => {
 	const context = useContext(ChildrenContext);
 
 	if (context === undefined) {
-		throw new Error(
-			'useChildrenContext must be used within ChildrenContextProvider'
-		);
+		throw new Error('useChildrenContext must be used within ChildrenContextProvider');
 	}
 	return context;
 };
