@@ -4,7 +4,6 @@ import ListItemAvatar from '@mui/material/ListItemAvatar';
 import Avatar from '@mui/material/Avatar';
 import ListItemText from '@mui/material/ListItemText';
 import Button from '@mui/material/Button';
-import {api} from '../../utils/api';
 
 type Props = {
 	data: Child;
@@ -13,24 +12,14 @@ type Props = {
 };
 
 export default function ChildListItem({data, onCheckIn, onCheckOut}: Props) {
-	const handleCheckIn = async () => {
-		onCheckIn(data.childId);
-		try {
-			await api.post(`/v2/children/${data.childId}/checkins`);
-		} catch (_) {
-			onCheckOut(data.childId);
-		}
+	const handleCheckIn = () => {
+		console.log(`'Trying to checkin in ${data.childId}`);
+		onCheckIn(data.childId); // Pass childId to check in
 	};
 
-	const handleCheckOut = async () => {
-		onCheckOut(data.childId);
-		try {
-			await api.post(`/v2/children/${data.childId}/checkout`);
-		} catch (_) {
-			onCheckIn(data.childId);
-		}
+	const handleCheckOut = () => {
+		onCheckOut(data.childId); // Pass childId to check out
 	};
-
 	return (
 		<ListItem>
 			<ListItemAvatar>
